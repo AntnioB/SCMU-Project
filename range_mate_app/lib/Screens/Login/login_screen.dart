@@ -6,6 +6,8 @@ enum FormData {
 }
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
@@ -36,10 +38,43 @@ class _LoginScreenState extends State<LoginScreen> {
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.black, width: 3)),
               child: Column(
-                children: const [
-                  Text(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Text(
                     "RangeMate",
                     style: TextStyle(color: Color(0xFF0D5D56), fontSize: 50),
+                  ),
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.8,
+                    child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const TextField(
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(),
+                              labelText: 'User Name',
+                              hintText: 'Enter your User Name.',
+                            ),
+                          ),
+                          const TextField(
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(),
+                              labelText: 'Password',
+                              hintText: 'Enter your password.',
+                            ),
+                          ),
+                          TextButton(
+                            style: ButtonStyle(
+                              backgroundColor:
+                                  MaterialStateProperty.all<Color>(
+                                    const Color(0xFF0D5D56)),
+                            ),
+                            onPressed: () {}, 
+                            child: const Text('Login',
+                              style: TextStyle(color: Colors.white),),)
+                        ]),
                   )
                 ],
               )),

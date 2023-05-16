@@ -13,6 +13,27 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final List<TextEditingController> _controller =
+      List.generate(2, (i) => TextEditingController());
+
+  @override
+  void dispose() {
+    for (final controller in _controller) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void login() {
+    final username = _controller[0].text;
+    final password = _controller[1].text;
+    //TODO: Add login logic
+  }
+
+  void signUp() {
+    //TODO: Add sign up logic
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,29 +72,57 @@ class _LoginScreenState extends State<LoginScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          const TextField(
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(),
-                              labelText: 'User Name',
-                              hintText: 'Enter your User Name.',
-                            ),
-                          ),
-                          const TextField(
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(),
-                              labelText: 'Password',
-                              hintText: 'Enter your password.',
-                            ),
-                          ),
-                          TextButton(
+                          Container(
+                              padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
+                              child: TextField(
+                                controller: _controller[0],
+                                decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
+                                  labelText: 'User Name',
+                                  hintText: 'Enter your User Name.',
+                                ),
+                              )),
+                          Container(
+                              padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
+                              child: TextField(
+                                controller: _controller[1],
+                                obscureText: true,
+                                decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
+                                  labelText: 'Password',
+                                  hintText: 'Enter your Password.',
+                                ),
+                              )),
+                          SizedBox(
+                            width: 150,
+                            child:ElevatedButton(
                             style: ButtonStyle(
-                              backgroundColor:
-                                  MaterialStateProperty.all<Color>(
-                                    const Color(0xFF0D5D56)),
+                              backgroundColor: MaterialStateProperty.all<Color>(
+                                  const Color(0xFF0D5D56)),
                             ),
-                            onPressed: () {}, 
-                            child: const Text('Login',
-                              style: TextStyle(color: Colors.white),),)
+                            onPressed: () {
+                              login();
+                            },
+                            child: const Text(
+                              'Login',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          )),
+                          SizedBox(
+                            width: 150,
+                            child: TextButton(
+                            style: ButtonStyle(
+                              backgroundColor: MaterialStateProperty.all<Color>(
+                                  const Color(0xFF0D5D56)),
+                            ),
+                            onPressed: () {
+                              signUp();
+                            },
+                            child: const Text(
+                              'Sign Up',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ))
                         ]),
                   )
                 ],

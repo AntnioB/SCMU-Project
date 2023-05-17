@@ -1,10 +1,16 @@
 
+
+//ultrasound sensor
 int trigPin = 12;    // TRIG pin
 int echoPin = 14;    // ECHO pin
-
-int motorPin = 25;   // MOTOR pin
-
 float duration_us, distance_cm;
+
+
+//motor
+int inM1 = 2;
+int inM2 = 15;    //inM1 and inM2 control spin direction
+int enM = 4;      //controls speed
+
 
 void setup() {
   // put your setup code here, to run once:
@@ -12,14 +18,33 @@ void setup() {
   // begin serial port
   Serial.begin (9600);
 
+  //ultrasound sensor
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
 
-  pinMode(motorPin, OUTPUT);
+  //motor
+  pinMode(inM1, OUTPUT);
+  pinMode(inM2, OUTPUT);
+  pinMode(enM, OUTPUT);
+
+  digitalWrite(inM1, LOW);
+  digitalWrite(inM2, LOW);
+
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+
+  calculateDistance();
+
+  if(distance_cm < 10){
+    spin();
+  }
+
+  delay(1000);
+
+}
+
+int calculateDistance(){
 
   // generate 10-microsecond pulse to TRIG pin
   digitalWrite(trigPin, HIGH);
@@ -37,11 +62,25 @@ void loop() {
   Serial.print(distance_cm);
   Serial.println(" cm");
 
-  if(distance_cm < 10){
-      digitalWrite(motorPin, 1);
-      delay(8000);
-  }
+}
 
-  delay(1000);
+void spin() {
+  
+  //max speed
+  analogWrite(enM, 255);
+  
+  //spin clock-wise
+  digitalWrite(inM1, LOW);
+  digitalWrite(inM2, HIGH);
+
+  Serial.print("Spining...");
+
+  //spin for theses ms
+  delay(5000);
+
+  //turn motor off
+  analogWrite(enM, 0);
+  digitalWrite(inM1, LOW);
+  digitalWrite(inM2, LOW);
 
 }

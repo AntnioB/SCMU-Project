@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:range_mate_app/Screens/Home/home_screen.dart';
 
 enum FormData {
   username,
@@ -27,6 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void login() {
     final username = _controller[0].text;
     final password = _controller[1].text;
+    Navigator.of(context).push(MaterialPageRoute(builder: (context) =>const HomeScreen()));
     //TODO: Add login logic
   }
 
@@ -64,7 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   const Text(
                     "RangeMate",
-                    style: TextStyle(color: Color(0xFF0D5D56), fontSize: 50),
+                    style: TextStyle(color: Color(0xFF0D5D56), fontFamily: 'BreeSerif'  ,fontSize: 50),
                   ),
                   SizedBox(
                     width: MediaQuery.of(context).size.width * 0.8,

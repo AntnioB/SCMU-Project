@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:range_mate_app/Screens/Home/home_screen.dart';
+import 'package:range_mate_app/Screens/Login/signin_screen.dart';
 
 enum FormData {
   username,
@@ -33,6 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void signUp() {
+        Navigator.of(context).push(MaterialPageRoute(builder: (context) =>const SignInScreen()));
     //TODO: Add sign up logic
   }
 

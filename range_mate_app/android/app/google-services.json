@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1083501040699",
+    "project_id": "rangemate-392ab",
+    "storage_bucket": "rangemate-392ab.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1083501040699:android:96b344c099641f428b381e",
+        "android_client_info": {
+          "package_name": "com.example.range_mate_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1083501040699-1kt5v3d5cb5b3npbnd1qdmlm78tgm0nl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD2fUFVGAvuK2PP3OOdUtGTI5JfN78GR2I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1083501040699-1kt5v3d5cb5b3npbnd1qdmlm78tgm0nl.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

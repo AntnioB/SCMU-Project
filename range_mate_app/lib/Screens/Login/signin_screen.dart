@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:range_mate_app/Screens/Login/login_screen.dart';
 
@@ -16,7 +18,21 @@ class SignInScreen extends StatefulWidget {
 
 class _SignInScreenState extends State<SignInScreen> {
   final List<TextEditingController> _controller =
-      List.generate(4, (i) => TextEditingController());
+      List.generate(3, (i) => TextEditingController());
+
+
+  void showError(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.white,
+          content: Text(message, style: const TextStyle(color: Colors.red)
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+  }
 
   @override
   void dispose() {
@@ -26,12 +42,50 @@ class _SignInScreenState extends State<SignInScreen> {
     super.dispose();
   }
 
-  void signUp() {
-    final username = _controller[0].text;
-    final email = _controller[1].text;
-    final password = _controller[2].text;
-    Navigator.of(context).push(MaterialPageRoute(builder: (context) =>const LoginScreen()));
-    //TODO: Add sign up logic
+  Future<void> signUp() async {
+    final email = _controller[0].text;
+    final password = _controller[1].text;
+    final confirmPassword = _controller[2].text;
+
+
+    if(email == '' || password == ''){
+      showError("Please fill in empty fields!");
+    } else if (password != confirmPassword) {
+      showError("Passwords do not match!");
+    } else {
+
+      try {
+        final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+
+        CollectionReference users = FirebaseFirestore.instance.collection('users');
+        users.add({
+          'id': credential.user?.uid,
+          'email': email,
+          'tokens': 3
+        });
+
+        Navigator.of(context).push(MaterialPageRoute(builder: (context) =>const LoginScreen()));
+
+      } on FirebaseAuthException catch (e) {
+        switch(e.code){
+          case('weak-password'):
+            showError('The password provided is too weak.');
+            break;
+          case('email-already-in-use'):
+            showError('The account already exists for that email.');
+            break;
+          case('invalid-email'):
+            showError('Email is badly formatted');
+        }
+      } catch (e) {
+        showError(e.toString());
+      }
+
+    }
+
   }
 
   @override
@@ -58,7 +112,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
+                  const Text(
                     'Sign Up',
                     style: TextStyle(
                       fontSize: 30,
@@ -67,29 +121,11 @@ class _SignInScreenState extends State<SignInScreen> {
                       color: Colors.white,
                     ),
                   ),
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width * 0.8,
-                    child: TextFormField(
-                      style: const TextStyle(color: Colors.white),
-                      controller: _controller[0],
-                      decoration: InputDecoration(
-                        labelText: 'Username',
-                        labelStyle: TextStyle(
-                          color: Colors.white,
-                        ),
-                        enabledBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
                    SizedBox(
                     width: MediaQuery.of(context).size.width * 0.8,
                     child: TextFormField(
                       style: const TextStyle(color: Colors.white),
-                      controller: _controller[1],
+                      controller: _controller[0],
                       decoration: InputDecoration(
                         labelText: 'Email',
                         labelStyle: TextStyle(
@@ -107,7 +143,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     width: MediaQuery.of(context).size.width * 0.8,
                     child: TextFormField(
                       style: const TextStyle(color: Colors.white),
-                      controller: _controller[2],
+                      controller: _controller[1],
                       obscureText: true,
                       decoration: InputDecoration(
                         labelText: 'Password',
@@ -125,10 +161,10 @@ class _SignInScreenState extends State<SignInScreen> {
                    SizedBox(
                     width: MediaQuery.of(context).size.width * 0.8,
                     child: TextFormField(
-                      controller: _controller[3],
+                      controller: _controller[2],
                       style: const TextStyle(color: Colors.white),
                       obscureText: true,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Confirm Password',
                         labelStyle: TextStyle(
                           color: Colors.white,

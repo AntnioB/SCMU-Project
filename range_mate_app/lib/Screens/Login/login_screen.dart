@@ -3,7 +3,7 @@ import 'package:range_mate_app/Screens/Home/home_screen.dart';
 import 'package:range_mate_app/Screens/Login/signin_screen.dart';
 
 enum FormData {
-  username,
+  email,
   password,
 }
 
@@ -27,14 +27,14 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void login() {
-    final username = _controller[0].text;
+    final email = _controller[0].text;
     final password = _controller[1].text;
     Navigator.of(context).push(MaterialPageRoute(builder: (context) =>const HomeScreen()));
     //TODO: Add login logic
   }
 
   void signUp() {
-        Navigator.of(context).push(MaterialPageRoute(builder: (context) =>const SignInScreen()));
+    Navigator.of(context).push(MaterialPageRoute(builder: (context) =>const SignInScreen()));
     //TODO: Add sign up logic
   }
 
@@ -82,8 +82,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 controller: _controller[0],
                                 decoration: const InputDecoration(
                                   border: OutlineInputBorder(),
-                                  labelText: 'User Name',
-                                  hintText: 'Enter your User Name.',
+                                  labelText: 'Email',
+                                  hintText: 'Enter your Email.',
                                 ),
                               )),
                           Container(

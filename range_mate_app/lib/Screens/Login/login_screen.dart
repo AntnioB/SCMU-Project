@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:range_mate_app/Screens/Home/home_screen.dart';
 import 'package:range_mate_app/Screens/Login/signin_screen.dart';
@@ -18,6 +19,19 @@ class _LoginScreenState extends State<LoginScreen> {
   final List<TextEditingController> _controller =
       List.generate(2, (i) => TextEditingController());
 
+  void showError(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.white,
+          content: Text(message, style: const TextStyle(color: Colors.red)
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+  }
+
   @override
   void dispose() {
     for (final controller in _controller) {
@@ -26,16 +40,30 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void login() {
+  Future<void> login() async {
     final email = _controller[0].text;
     final password = _controller[1].text;
-    Navigator.of(context).push(MaterialPageRoute(builder: (context) =>const HomeScreen()));
-    //TODO: Add login logic
+
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password);
+      Navigator.of(context).push(MaterialPageRoute(builder: (context) => const HomeScreen()));
+    } on FirebaseAuthException catch (e) {
+      switch(e.code){
+        case('wrong-password'):
+        case('invalid-email'):
+        case('user-not-found'):
+          showError('Inavlid email or password!');
+          break;
+        case('user-disabled'):
+          showError('Account is disabled.');
+      }
+    } catch (e) {
+      showError(e.toString());
+    }
   }
 
   void signUp() {
     Navigator.of(context).push(MaterialPageRoute(builder: (context) =>const SignInScreen()));
-    //TODO: Add sign up logic
   }
 
   @override

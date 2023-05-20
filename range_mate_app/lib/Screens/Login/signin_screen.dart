@@ -60,12 +60,24 @@ class _SignInScreenState extends State<SignInScreen> {
           password: password,
         );
 
+
         CollectionReference users = FirebaseFirestore.instance.collection('users');
         users.add({
           'id': credential.user?.uid,
           'email': email,
           'tokens': 3
         });
+
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              backgroundColor: Colors.white,
+              content: Text('Account was successfully created!', style: TextStyle(color: Colors.green)
+              ),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
 
         Navigator.of(context).push(MaterialPageRoute(builder: (context) =>const LoginScreen()));
 

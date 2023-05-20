@@ -1,5 +1,8 @@
+import 'dart:async';
 import 'dart:developer';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:range_mate_app/Screens/User/user_profile_screen.dart';
 
@@ -10,6 +13,8 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
+
+
 class _HomeScreenState extends State<HomeScreen> {
 
   void userProfileButtonPress(){
@@ -17,7 +22,25 @@ class _HomeScreenState extends State<HomeScreen> {
     log("User Profile Button Pressed");
     Navigator.of(context).push(MaterialPageRoute(builder: (context) =>const UserProfileScreen()));
   }
+  
+  Future<String> getTokenNum() async{
+    var user = FirebaseAuth.instance.currentUser;
+    String res = "-1";
+    await FirebaseFirestore.instance.collection('users').where("id", isEqualTo: user?.uid).get().then(
+            (query) => {
+               res = query.docs.first.get("tokens").toString()
+            }
+    );
+    return res;
+  }
 
+  @override
+  void initState() {
+    super.initState();
+    // this should not be done in build method.
+    getTokenNum();
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -87,12 +110,37 @@ class _HomeScreenState extends State<HomeScreen> {
                         Container(
                             padding: const EdgeInsets.fromLTRB(0, 75, 30, 0),
                             alignment: Alignment.bottomCenter,
-                            child: Text('3',
-                                style: TextStyle(
-                                    fontSize: 50,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black)))
-                      ])),
+                            child: FutureBuilder<String>(
+                                  future: getTokenNum(),
+                                  builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+                                    Text child;
+                                    if(snapshot.hasData){
+                                      child = Text(snapshot.data ?? '',
+                                          style: const TextStyle(
+                                              fontSize: 50,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black));
+                                    }
+                                    else if(snapshot.hasError) {
+                                      print(snapshot.error);
+                                      child = const Text('error',
+                                          style: TextStyle(
+                                              fontSize: 50,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black));
+                                    }
+                                    else {
+                                      child = const Text('',
+                                          style: TextStyle(
+                                              fontSize: 50,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black));
+                                    }
+                                    return child;
+                                  }
+                            ),
+
+                        )])),
                   Container(
                       padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
                       alignment: Alignment.bottomCenter,

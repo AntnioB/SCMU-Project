@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:range_mate_app/Screens/Bluetooth/connect.dart';
 import 'package:range_mate_app/Screens/User/user_profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -144,11 +145,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   Container(
                       padding: const EdgeInsets.fromLTRB(0, 10, 0, 0),
                       alignment: Alignment.bottomCenter,
-                      child: const Text('Tap to Connect',
-                          style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black)))
+                      child:  TextButton(
+                        style: ButtonStyle(
+                          foregroundColor: MaterialStateProperty.all<Color>(Colors.blue),
+                        ),
+                        onPressed: () { Navigator.of(context).push(MaterialPageRoute(builder: (context) =>const FlutterBlueApp())); },
+                        child: const Text('Tap to Connect'),
+                      )
+                  )
                 ],
               )),
           Expanded(

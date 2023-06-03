@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:range_mate_app/Screens/Bluetooth/connect.dart';
 import 'package:range_mate_app/Screens/User/user_profile_screen.dart';
 
@@ -17,6 +18,7 @@ class HomeScreen extends StatefulWidget {
 
 
 class _HomeScreenState extends State<HomeScreen> {
+  late TextEditingController purchaseTokensNum;
 
   void userProfileButtonPress(){
     //stderr.writeln('User Profile Button Pressed');
@@ -35,11 +37,70 @@ class _HomeScreenState extends State<HomeScreen> {
     return res;
   }
 
+  updateToken(User? user,int value, int valToSum) async{
+    int tokens = valToSum + value;
+    await FirebaseFirestore.instance.collection('users').where("id", isEqualTo: user?.uid).get().then(
+      (query) => {
+        FirebaseFirestore.instance.collection('users').doc(query.docs.first.id).update(
+            {
+              "tokens": tokens
+            })
+      }
+      );
+  }
+  purchaseTokens() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    int valToSum = int.parse(purchaseTokensNum.value.text);
+    getTokenNum().then(
+            (value) => {
+              updateToken(user, int.parse(value), valToSum)
+            }
+    );
+    purchaseTokensNum.clear();
+    Navigator.of(context).pop();
+  }
+
+  cancel(){
+    purchaseTokensNum.clear();
+    Navigator.of(context).pop();
+  }
+
+ Future showPaymentAlert(BuildContext context) {return showDialog(
+      context: context,
+      builder: (BuildContext context) { return
+        AlertDialog(
+          title: const Text('Simulate buying tokens'),
+          content: TextField(
+            controller: purchaseTokensNum,
+            maxLength: 1,
+              decoration: const InputDecoration(
+                  labelText: "Enter amount to purchase"),
+              keyboardType: TextInputType.number,
+              inputFormatters: <TextInputFormatter>[
+                LengthLimitingTextInputFormatter(1),
+                FilteringTextInputFormatter.digitsOnly
+              ]),
+          actions: [
+            TextButton(
+                onPressed: () => purchaseTokens(), child: const Text('Purchase', style: TextStyle(color: Colors.green),)),
+            TextButton(onPressed: () => cancel(), child: const Text('Cancel', style: TextStyle(color: Colors.red)))
+          ],
+        );
+      });
+  }
+
   @override
   void initState() {
     super.initState();
     // this should not be done in build method.
     getTokenNum();
+    purchaseTokensNum = TextEditingController();
+  }
+
+  @override
+  void dispose(){
+    purchaseTokensNum.dispose();
+    super.dispose();
   }
   
   @override
@@ -179,15 +240,21 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Container(
                       alignment: Alignment.bottomCenter,
                       padding: const EdgeInsets.fromLTRB(0, 0, 0, 40),
-                      child: const Text('Buy Tokens',
+                      child: TextButton(
+                          onPressed: () {
+                            showPaymentAlert(context);
+                          },
+                          child: const Text('Buy Tokens',
                           style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: Colors.black))))
+                              color: Colors.black)))))
             ])
           ]))
         ]),
       ),
     );
   }
+
+
 }

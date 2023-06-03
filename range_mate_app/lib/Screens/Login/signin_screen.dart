@@ -65,7 +65,8 @@ class _SignInScreenState extends State<SignInScreen> {
         users.add({
           'id': credential.user?.uid,
           'email': email,
-          'tokens': 3
+          'tokens': 3,
+          'manager': false
         });
 
         ScaffoldMessenger.of(context)
@@ -138,7 +139,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     child: TextFormField(
                       style: const TextStyle(color: Colors.white),
                       controller: _controller[0],
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Email',
                         labelStyle: TextStyle(
                           color: Colors.white,
@@ -157,7 +158,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       style: const TextStyle(color: Colors.white),
                       controller: _controller[1],
                       obscureText: true,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Password',
                         labelStyle: TextStyle(
                           color: Colors.white,

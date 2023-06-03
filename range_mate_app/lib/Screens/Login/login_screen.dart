@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:range_mate_app/Screens/Home/home_screen.dart';
 import 'package:range_mate_app/Screens/Login/signin_screen.dart';
+import 'package:range_mate_app/Screens/User/manager_screen.dart';
 
 enum FormData {
   email,
@@ -46,7 +48,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password);
-      Navigator.of(context).push(MaterialPageRoute(builder: (context) => const HomeScreen()));
+      var user = FirebaseAuth.instance.currentUser;
+      bool isManager = false;
+      await FirebaseFirestore.instance.collection('users').where("id", isEqualTo: user?.uid).get().then(
+            (query) => {
+               isManager = query.docs.first.get("manager")
+            }
+    );
+      if(isManager){
+        Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ManagerScreen()));
+      } else{
+        Navigator.of(context).push(MaterialPageRoute(builder: (context) => const HomeScreen()));
+      }
     } on FirebaseAuthException catch (e) {
       switch(e.code){
         case('wrong-password'):

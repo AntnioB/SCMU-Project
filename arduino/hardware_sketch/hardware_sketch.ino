@@ -1,18 +1,58 @@
 #include <Servo.h>
 #include <LiquidCrystal_I2C.h>
 #include <ArduinoBLE.h>
+#include <Arduino.h>
+#include <Ticker.h>
+#include <WiFi.h>
+#include <Firebase_ESP_Client.h>
+
+//Provide the token generation process info.
+#include "addons/TokenHelper.h"
+
+//Provide the RTDB payload printing info and other helper functions.
+#include "addons/RTDBHelper.h"
+
+// Insert your network credentials
+#define WIFI_SSID "NOWO-E2EAB"
+#define WIFI_PASSWORD "3h27MEuB"
+
+// Insert Firebase project API Key
+#define API_KEY "AIzaSyD2fUFVGAvuK2PP3OOdUtGTI5JfN78GR2I"
+
+#define USER_EMAIL "a.brejo@gmail.com"
+#define USER_PASSWORD "Pass1234"
+#define FIREBASE_PROJECT_ID "rangemate-392ab"
+
+#define DEVICE_ID "19B10010-E8F2-537E-4F6C-D104768A1214"
+
+//Define Firebase Data object
+FirebaseData fbdo;
+
+FirebaseAuth auth;
+FirebaseConfig config;
 
 
 //state
 typedef enum {
-  OFF, STANDBY, RESERVED, DISPENSING
+  OFF,
+  STANDBY,
+  RESERVED, 
+  DISPENSING
 } State;
+
+static const char *enum_to_string[] ={ 
+    "OFF", 
+    "STANDBY", 
+    "RESERVED", 
+    "DISPENSING" 
+};
+
 State state = OFF;
 
 
 //Bluetooth
-BLEService dispenseService("19B10010-E8F2-537E-4F6C-D104768A1214"); // create service
-BLEByteCharacteristic dispenseCharacteristic("19B10011-E8F2-537E-4F6C-D104768A1214", BLERead | BLEWrite); // create switch characteristic and allow remote device to read and write
+BLEService dispenseService(DEVICE_ID); // create service
+BLEByteCharacteristic dispenseCharacteristic(DEVICE_ID, BLERead | BLEWrite); // create switch characteristic and allow remote device to read and write
 
 
 //ultrasound sensor
@@ -37,11 +77,13 @@ int lcdColumns = 16; //number of display columns
 int lcdRows = 2; //number of display rows
 LiquidCrystal_I2C lcd(0x27, lcdColumns, lcdRows); //creates the lcd 
 
+
+
 void setup() {
   
   // begin serial port
   Serial.begin (9600);
-  while(!Serial);
+  while(!Serial); 
 
   //Bluetooth
   if (!BLE.begin()) {
@@ -55,6 +97,8 @@ void setup() {
   BLE.addService(dispenseService);  //add the service
   dispenseCharacteristic.writeValue(0);
 
+  //Network
+  initNetwork();
 
   //LCD
   lcd.backlight();
@@ -76,7 +120,6 @@ void setup() {
 }
 
 void loop() {
-
   switch(state){
     case OFF:
       state_off();
@@ -90,12 +133,13 @@ void loop() {
       state_dispensing();
       break;
   }
-
 }
 
 //OFF state represents when the machine was turned off or is out of ball for example
 void state_off(){
+  updateStatus();
   setColor(255,0,0);
+  lcd.off();
   delay(1000);
 }
 
@@ -158,4 +202,51 @@ void setColor(int redValue, int greenValue, int blueValue) {
   analogWrite(led_r, 255-redValue);
   analogWrite(led_g, 255-greenValue);
   analogWrite(led_b, 255-blueValue);
+}
+
+void initNetwork(){
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  Serial.print("Connecting to Wi-Fi");
+  while (WiFi.status() != WL_CONNECTED){
+    Serial.print(".");
+    delay(300);
+  }
+  Serial.println();
+  Serial.print("Connected with IP: ");
+  Serial.println(WiFi.localIP());
+  Serial.println();
+
+  /* Assign the api key (required) */
+  config.api_key = API_KEY;
+
+  auth.user.email = USER_EMAIL;
+  auth.user.password = USER_PASSWORD;
+
+  /* Assign the callback function for the long running token generation task */
+  config.token_status_callback = tokenStatusCallback; //see addons/TokenHelper.h
+  
+  Firebase.begin(&config, &auth);
+  Firebase.reconnectWiFi(true);
+}
+
+void updateStatus(){
+  if (Firebase.ready()){
+    String path = "/devices/19B10010-E8F2-537E-4F6C-D104768A1214/";
+
+    FirebaseJson content;
+
+    content.set("fields/status/stringValue", String(enum_to_string[state]).c_str());
+    content.set("fields/hasBalls/booleanValue", String(true).c_str());
+    
+    // Write an Int number on the database path test/int
+    if (Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID,"", path.c_str(), content.raw(), "")){
+      Serial.println("PASSED");
+      Serial.println("PATH: " + fbdo.dataPath());
+      Serial.println("TYPE: " + fbdo.dataType());
+    }
+    else {
+      Serial.println("FAILED");
+      Serial.println("REASON: " + fbdo.errorReason());
+    }
+  }
 }

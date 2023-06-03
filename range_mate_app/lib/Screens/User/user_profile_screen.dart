@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class UserProfileScreen extends StatefulWidget {
@@ -44,9 +45,9 @@ class _UserProfileScreen extends State<UserProfileScreen> {
             )),
           Container(
             padding: const EdgeInsets.fromLTRB(0, 25, 0, 0),
-            child: CircleAvatar(
+            child: const CircleAvatar(
               radius: 125,
-              backgroundImage: AssetImage('images/UserProfile.jpg'),
+              backgroundImage: AssetImage('images/UserProfile.png'),
             ),
           ),
           Container(
@@ -54,7 +55,7 @@ class _UserProfileScreen extends State<UserProfileScreen> {
             child: Column(
               children: [
                 Row(children:[
-              const Text('UserName',
+              Text('UserName',
               style: TextStyle(
                 fontSize: 15,
                 color: Colors.white,
@@ -72,7 +73,7 @@ class _UserProfileScreen extends State<UserProfileScreen> {
                 color: Colors.white,
               ),),]),
               Row(children:[
-              Text('realDonaldTrump@gmail.com'),]),
+              Text(FirebaseAuth.instance.currentUser!.email.toString()),]),
               Divider(
                 thickness: 3,
                 color: Colors.grey,

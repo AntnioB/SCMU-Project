@@ -23,6 +23,8 @@
 #define USER_PASSWORD "Pass1234"
 #define FIREBASE_PROJECT_ID "rangemate-392ab"
 
+#define DEVICE_ID "19B10010-E8F2-537E-4F6C-D104768A1214"
+
 //Define Firebase Data object
 FirebaseData fbdo;
 
@@ -32,14 +34,25 @@ FirebaseConfig config;
 
 //state
 typedef enum {
-  OFF, STANDBY, RESERVED, DISPENSING
+  OFF,
+  STANDBY,
+  RESERVED, 
+  DISPENSING
 } State;
+
+static const char *enum_to_string[] ={ 
+    "OFF", 
+    "STANDBY", 
+    "RESERVED", 
+    "DISPENSING" 
+};
+
 State state = OFF;
 
 
 //Bluetooth
-BLEService dispenseService("19B10010-E8F2-537E-4F6C-D104768A1214"); // create service
-BLEByteCharacteristic dispenseCharacteristic("19B10011-E8F2-537E-4F6C-D104768A1214", BLERead | BLEWrite); // create switch characteristic and allow remote device to read and write
+BLEService dispenseService(DEVICE_ID); // create service
+BLEByteCharacteristic dispenseCharacteristic(DEVICE_ID, BLERead | BLEWrite); // create switch characteristic and allow remote device to read and write
 
 
 //ultrasound sensor
@@ -124,6 +137,7 @@ void loop() {
 
 //OFF state represents when the machine was turned off or is out of ball for example
 void state_off(){
+  updateStatus();
   setColor(255,0,0);
   lcd.off();
   delay(1000);
@@ -208,11 +222,31 @@ void initNetwork(){
   auth.user.email = USER_EMAIL;
   auth.user.password = USER_PASSWORD;
 
-  /* Sign up */
-
   /* Assign the callback function for the long running token generation task */
   config.token_status_callback = tokenStatusCallback; //see addons/TokenHelper.h
   
   Firebase.begin(&config, &auth);
   Firebase.reconnectWiFi(true);
+}
+
+void updateStatus(){
+  if (Firebase.ready()){
+    String path = "/devices/19B10010-E8F2-537E-4F6C-D104768A1214/";
+
+    FirebaseJson content;
+
+    content.set("fields/status/stringValue", String(enum_to_string[state]).c_str());
+    content.set("fields/hasBalls/booleanValue", String(true).c_str());
+    
+    // Write an Int number on the database path test/int
+    if (Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID,"", path.c_str(), content.raw(), "")){
+      Serial.println("PASSED");
+      Serial.println("PATH: " + fbdo.dataPath());
+      Serial.println("TYPE: " + fbdo.dataType());
+    }
+    else {
+      Serial.println("FAILED");
+      Serial.println("REASON: " + fbdo.errorReason());
+    }
+  }
 }

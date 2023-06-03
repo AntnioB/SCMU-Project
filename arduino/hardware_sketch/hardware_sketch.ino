@@ -1,7 +1,12 @@
 #include <Servo.h>
 #include <LiquidCrystal_I2C.h>
 #include <ArduinoBLE.h>
+#include "Network.h"
+#include <Ticker.h>
 
+
+
+Network *network;
 
 //state
 typedef enum {
@@ -37,11 +42,80 @@ int lcdColumns = 16; //number of display columns
 int lcdRows = 2; //number of display rows
 LiquidCrystal_I2C lcd(0x27, lcdColumns, lcdRows); //creates the lcd 
 
+
+
+/** Task handle for the light value read task */
+TaskHandle_t tempTaskHandle = NULL;
+/** Ticker for temperature reading */
+Ticker tempTicker;
+/** Flag if task should run */
+bool tasksEnabled = false;
+
+/**
+ * initTemp
+ * Setup DHT library
+ * Setup task and timer for repeated measurement
+ * @return bool
+ *    true if task and timer are started
+ *    false if task or timer couldn't be started
+ */
+bool initTemp() {
+  byte resultValue = 0;
+
+  // Start task to get temperature
+	xTaskCreatePinnedToCore(
+			tempTask,                       /* Function to implement the task */
+			"tempTask ",                    /* Name of the task */
+			100000,                           /* Stack size in words */
+			NULL,                           /* Task input parameter */
+			5,                              /* Priority of the task */
+			&tempTaskHandle,                /* Task handle. */
+			1);                             /* Core where the task should run */
+
+  if (tempTaskHandle == NULL) {
+    Serial.println("Failed to start task for temperature update");
+    return false;
+  } else {
+    // Start update of environment data every 20 seconds
+    tempTicker.attach(20, triggerGetTemp);
+  }
+  return true;
+}
+
+/**
+ * triggerGetTemp
+ * Sets flag dhtUpdated to true for handling in loop()
+ * called by Ticker getTempTimer
+ */
+void triggerGetTemp() {
+  if (tempTaskHandle != NULL) {
+	   xTaskResumeFromISR(tempTaskHandle);
+  }
+}
+
+/**
+ * Task to reads temperature from DHT11 sensor
+ * @param pvParameters
+ *    pointer to task parameters
+ */
+void tempTask(void *pvParameters) {
+	Serial.println("tempTask loop started");
+	while (1) // tempTask loop
+  {
+    if (tasksEnabled) {
+      main_task();
+		}
+    // Got sleep again
+		vTaskSuspend(NULL);
+	}
+}
+
+
 void setup() {
   
   // begin serial port
   Serial.begin (9600);
-  while(!Serial);
+  while(!Serial); 
 
   //Bluetooth
   if (!BLE.begin()) {
@@ -55,6 +129,10 @@ void setup() {
   BLE.addService(dispenseService);  //add the service
   dispenseCharacteristic.writeValue(0);
 
+  //Network
+  initNetwork();
+
+  initTemp();
 
   //LCD
   lcd.backlight();
@@ -77,6 +155,20 @@ void setup() {
 
 void loop() {
 
+  if (!tasksEnabled) {
+    // Wait 2 seconds to let system settle down
+    delay(2000);
+    // Enable task that will read values from the DHT sensor
+    tasksEnabled = true;
+    if (tempTaskHandle != NULL) {
+			vTaskResume(tempTaskHandle);
+		}
+  }
+  yield();
+
+}
+
+bool main_task(){
   switch(state){
     case OFF:
       state_off();
@@ -90,7 +182,7 @@ void loop() {
       state_dispensing();
       break;
   }
-
+  return true;
 }
 
 //OFF state represents when the machine was turned off or is out of ball for example
@@ -158,4 +250,9 @@ void setColor(int redValue, int greenValue, int blueValue) {
   analogWrite(led_r, 255-redValue);
   analogWrite(led_g, 255-greenValue);
   analogWrite(led_b, 255-blueValue);
+}
+
+void initNetwork(){
+  network = new Network();
+  network->initWiFi();
 }

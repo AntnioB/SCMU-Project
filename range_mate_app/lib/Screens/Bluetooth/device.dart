@@ -6,33 +6,39 @@ class DeviceScreen extends StatelessWidget {
 
   final BluetoothDevice device;
 
-  List<Widget> _buildServiceTiles(List<BluetoothService> services) {
-    return services
-        .map((e) => Column(
-      children: [
-          ListTile(
-           title: const Text("OFF"),
-            onTap: () {
-              print(e.characteristics);
-              e.characteristics[0].write([0]);
-          },
-        ),
-          ListTile(
-          title: const Text("ON"),
-          onTap: () {
-            print(e.characteristics);
-            e.characteristics[0].write([1]);
-          },
-        ),
-      ],
-    ))
-        .toList();
+  Widget _buildServiceTiles(List<BluetoothService> services) {
+
+    for(var i=0;i<services.length;i++){
+      if(services[i].characteristics[0].uuid.toString() == "19b10010-e8f2-537e-4f6c-d104768a1214") {
+        BluetoothCharacteristic aux = services[i].characteristics[0];
+        return Column(
+          children: [
+            ListTile(
+              splashColor: Colors.amber,
+              title: const Text("Reserve now", style: TextStyle(fontSize: 22),),
+              onTap: () {
+                aux.write([1]);
+              },
+            ),
+            ListTile(
+              splashColor: Colors.amber,
+              title: const Text("End reservation", style: TextStyle(fontSize: 22),),
+              onTap: () {
+              aux.write([0]);
+              },
+            )
+          ],
+        );
+      }
+    }
+    return Text("");
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.amber,
         title: Text(device.name),
         actions: <Widget>[
           StreamBuilder<BluetoothDeviceState>(
@@ -105,9 +111,7 @@ class DeviceScreen extends StatelessWidget {
               stream: device.services,
               initialData: const [],
               builder: (c, snapshot) {
-                return Column(
-                  children: _buildServiceTiles(snapshot.data!),
-                );
+                return  _buildServiceTiles(snapshot.data!);
               },
             ),
           ],

@@ -43,11 +43,10 @@ typedef enum {
 static const char *enum_to_string[] ={ 
     "OFF", 
     "STANDBY", 
-    "RESERVED", 
-    "DISPENSING" 
+    "RESERVED"
 };
 
-State state = OFF;
+State state = STANDBY;
 
 
 //Bluetooth
@@ -96,6 +95,7 @@ void setup() {
   dispenseService.addCharacteristic(dispenseCharacteristic); //add the characteristics to the service
   BLE.addService(dispenseService);  //add the service
   dispenseCharacteristic.writeValue(0);
+  BLE.advertise();
 
   //Network
   initNetwork();
@@ -122,42 +122,56 @@ void setup() {
 void loop() {
   switch(state){
     case OFF:
+    Serial.println("OFF");
       state_off();
       break;
     case STANDBY:
+      Serial.println("STANDBY");
       state_standby();
       break;
     case RESERVED:
+      Serial.println("RESERVED");
       state_reserved();
-    case DISPENSING:
-      state_dispensing();
       break;
   }
+  
 }
 
 //OFF state represents when the machine was turned off or is out of ball for example
 void state_off(){
   updateStatus();
   setColor(255,0,0);
-  lcd.off();
+  lcd.noBacklight();
   delay(1000);
 }
 
 //STANDBY state represents a on machine that is waiting to be reserved
 void state_standby(){
-  setColor(0,255,0);
-  delay(1000);
+  setColor(0,0,255);
 
+  BLE.poll();
+
+  boolean connected = (dispenseCharacteristic.value() != 0);
+
+  if(connected){
+    state = RESERVED;
+  }
+  
   //quando ele for reservado faz BLE.advertise(); depois troca de estado
 }
 
 //RESERVED state represents a machine that has been reserved and is awating a blueetooth conection to begin normal operations
 void state_reserved(){
-  setColor(0, 0, 255);
-}
+  setColor(0, 255, 0);
 
-//DISPENSING state represents a machine that is beeing used by the user
-void state_dispensing(){
+  BLE.poll();
+
+  boolean disconnected = (dispenseCharacteristic.value() != 1);
+
+  if(disconnected || !BLE.connected()){
+    state = STANDBY;
+  }
+
   checkForMovement();
   delay(1000);
 }

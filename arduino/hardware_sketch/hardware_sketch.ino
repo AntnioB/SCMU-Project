@@ -1,12 +1,34 @@
 #include <Servo.h>
 #include <LiquidCrystal_I2C.h>
 #include <ArduinoBLE.h>
-#include "Network.h"
+#include <Arduino.h>
 #include <Ticker.h>
+#include <WiFi.h>
+#include <Firebase_ESP_Client.h>
 
+//Provide the token generation process info.
+#include "addons/TokenHelper.h"
 
+//Provide the RTDB payload printing info and other helper functions.
+#include "addons/RTDBHelper.h"
 
-Network *network;
+// Insert your network credentials
+#define WIFI_SSID "NOWO-E2EAB"
+#define WIFI_PASSWORD "3h27MEuB"
+
+// Insert Firebase project API Key
+#define API_KEY "AIzaSyD2fUFVGAvuK2PP3OOdUtGTI5JfN78GR2I"
+
+#define USER_EMAIL "a.brejo@gmail.com"
+#define USER_PASSWORD "Pass1234"
+#define FIREBASE_PROJECT_ID "rangemate-392ab"
+
+//Define Firebase Data object
+FirebaseData fbdo;
+
+FirebaseAuth auth;
+FirebaseConfig config;
+
 
 //state
 typedef enum {
@@ -44,73 +66,6 @@ LiquidCrystal_I2C lcd(0x27, lcdColumns, lcdRows); //creates the lcd
 
 
 
-/** Task handle for the light value read task */
-TaskHandle_t tempTaskHandle = NULL;
-/** Ticker for temperature reading */
-Ticker tempTicker;
-/** Flag if task should run */
-bool tasksEnabled = false;
-
-/**
- * initTemp
- * Setup DHT library
- * Setup task and timer for repeated measurement
- * @return bool
- *    true if task and timer are started
- *    false if task or timer couldn't be started
- */
-bool initTemp() {
-  byte resultValue = 0;
-
-  // Start task to get temperature
-	xTaskCreatePinnedToCore(
-			tempTask,                       /* Function to implement the task */
-			"tempTask ",                    /* Name of the task */
-			100000,                           /* Stack size in words */
-			NULL,                           /* Task input parameter */
-			5,                              /* Priority of the task */
-			&tempTaskHandle,                /* Task handle. */
-			1);                             /* Core where the task should run */
-
-  if (tempTaskHandle == NULL) {
-    Serial.println("Failed to start task for temperature update");
-    return false;
-  } else {
-    // Start update of environment data every 20 seconds
-    tempTicker.attach(20, triggerGetTemp);
-  }
-  return true;
-}
-
-/**
- * triggerGetTemp
- * Sets flag dhtUpdated to true for handling in loop()
- * called by Ticker getTempTimer
- */
-void triggerGetTemp() {
-  if (tempTaskHandle != NULL) {
-	   xTaskResumeFromISR(tempTaskHandle);
-  }
-}
-
-/**
- * Task to reads temperature from DHT11 sensor
- * @param pvParameters
- *    pointer to task parameters
- */
-void tempTask(void *pvParameters) {
-	Serial.println("tempTask loop started");
-	while (1) // tempTask loop
-  {
-    if (tasksEnabled) {
-      main_task();
-		}
-    // Got sleep again
-		vTaskSuspend(NULL);
-	}
-}
-
-
 void setup() {
   
   // begin serial port
@@ -132,8 +87,6 @@ void setup() {
   //Network
   initNetwork();
 
-  initTemp();
-
   //LCD
   lcd.backlight();
   lcd.setCursor(0, 0);
@@ -154,21 +107,6 @@ void setup() {
 }
 
 void loop() {
-
-  if (!tasksEnabled) {
-    // Wait 2 seconds to let system settle down
-    delay(2000);
-    // Enable task that will read values from the DHT sensor
-    tasksEnabled = true;
-    if (tempTaskHandle != NULL) {
-			vTaskResume(tempTaskHandle);
-		}
-  }
-  yield();
-
-}
-
-bool main_task(){
   switch(state){
     case OFF:
       state_off();
@@ -182,12 +120,12 @@ bool main_task(){
       state_dispensing();
       break;
   }
-  return true;
 }
 
 //OFF state represents when the machine was turned off or is out of ball for example
 void state_off(){
   setColor(255,0,0);
+  lcd.off();
   delay(1000);
 }
 
@@ -253,6 +191,28 @@ void setColor(int redValue, int greenValue, int blueValue) {
 }
 
 void initNetwork(){
-  network = new Network();
-  network->initWiFi();
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  Serial.print("Connecting to Wi-Fi");
+  while (WiFi.status() != WL_CONNECTED){
+    Serial.print(".");
+    delay(300);
+  }
+  Serial.println();
+  Serial.print("Connected with IP: ");
+  Serial.println(WiFi.localIP());
+  Serial.println();
+
+  /* Assign the api key (required) */
+  config.api_key = API_KEY;
+
+  auth.user.email = USER_EMAIL;
+  auth.user.password = USER_PASSWORD;
+
+  /* Sign up */
+
+  /* Assign the callback function for the long running token generation task */
+  config.token_status_callback = tokenStatusCallback; //see addons/TokenHelper.h
+  
+  Firebase.begin(&config, &auth);
+  Firebase.reconnectWiFi(true);
 }

@@ -153,8 +153,9 @@ void state_standby(){
 
   boolean connected = (dispenseCharacteristic.value() != 0);
 
-  if(connected){
+  if(connected && BLE.connected()){
     state = RESERVED;
+    delay(1000);
   }
   
   //quando ele for reservado faz BLE.advertise(); depois troca de estado
@@ -170,6 +171,9 @@ void state_reserved(){
 
   if(disconnected || !BLE.connected()){
     state = STANDBY;
+    dispenseCharacteristic.writeValue(0);
+    delay(1000);
+
   }
 
   checkForMovement();

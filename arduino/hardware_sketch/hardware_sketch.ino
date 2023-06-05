@@ -153,7 +153,7 @@ void state_off(){
 //STANDBY state represents a on machine that is waiting to be reserved
 void state_standby(){
   setColor(0,0,255);
-
+  
   BLE.poll();
 
   boolean connected = (dispenseCharacteristic.value() != 0);
@@ -207,7 +207,7 @@ void checkForMovement(){
 
   if(distance_cm < 10){
     spin();
-    delay(3000)
+    delay(3000);
     checkForBalls();
   }
 }

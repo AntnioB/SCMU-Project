@@ -174,6 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             alignment: Alignment.bottomCenter,
                             child: FutureBuilder<String>(
                                   future: getTokenNum(),
+
                                   builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
                                     Text child;
                                     if(snapshot.hasData){

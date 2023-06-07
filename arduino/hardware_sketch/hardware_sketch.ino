@@ -55,9 +55,12 @@ BLEByteCharacteristic dispenseCharacteristic(DEVICE_ID, BLERead | BLEWrite); // 
 
 
 //ultrasound sensor
-int trigPin = 14;    // TRIG pin
-int echoPin = 12;    // ECHO pin
+int trigPin = 27;    // TRIG pin
+int echoPin = 26;    // ECHO pin
 float duration_us, distance_cm;
+int trigPin2 = 14;
+int echoPin2 = 12;
+float duration2, distance2;
 
 
 //servo
@@ -108,6 +111,8 @@ void setup() {
   //ultrasound sensor
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
+  pinMode(trigPin2, OUTPUT);
+  pinMode(echoPin2, INPUT);
 
   //servo
   servo.attach(servo_pin);
@@ -148,7 +153,7 @@ void state_off(){
 //STANDBY state represents a on machine that is waiting to be reserved
 void state_standby(){
   setColor(0,0,255);
-
+  
   BLE.poll();
 
   boolean connected = (dispenseCharacteristic.value() != 0);
@@ -202,6 +207,33 @@ void checkForMovement(){
 
   if(distance_cm < 10){
     spin();
+    delay(3000);
+    checkForBalls();
+  }
+}
+
+void checkForBalls(){
+  digitalWrite(trigPin2, LOW);
+  delayMicroseconds(2); // wait for 2 ms to avoid collision in serial monitor
+
+  // generate 10-microsecond pulse to TRIG pin
+  digitalWrite(trigPin2, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin2, LOW);
+
+  // measure duration of pulse from ECHO pin
+  duration2 = pulseIn(echoPin2, HIGH);
+
+  // calculate the distance
+  distance2 = 0.017 * duration2;
+
+  // print the value to Serial Monitor
+  Serial.print("ballDistance: ");
+  Serial.print(distance2);
+  Serial.println(" cm");
+
+  if(distance2 > 6){
+    //sendNotification()
   }
 }
 

@@ -31,6 +31,8 @@ FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
 
+WiFiServer wifiServer(80);
+
 
 //state
 typedef enum {
@@ -127,15 +129,12 @@ void setup() {
 void loop() {
   switch(state){
     case OFF:
-    Serial.println("OFF");
       state_off();
       break;
     case STANDBY:
-      Serial.println("STANDBY");
       state_standby();
       break;
     case RESERVED:
-      Serial.println("RESERVED");
       state_reserved();
       break;
   }
@@ -248,6 +247,24 @@ void spin() {
   lcd.clear();
 }
 
+void receiveWifi(){
+  WiFiClient client = wifiServer.available();
+  if(client){
+    while(client.connected()){
+      while(client.available()){
+        char c = client.read();
+        
+        if(c=='0'){
+          state = OFF;
+        }
+        else if(c == '1'){
+          state = STANDBY;
+        }
+      }
+    }
+  }
+}
+
 void setColor(int redValue, int greenValue, int blueValue) {
   analogWrite(led_r, 255-redValue);
   analogWrite(led_g, 255-greenValue);
@@ -265,6 +282,8 @@ void initNetwork(){
   Serial.print("Connected with IP: ");
   Serial.println(WiFi.localIP());
   Serial.println();
+
+  wifiServer.begin();
 
   /* Assign the api key (required) */
   config.api_key = API_KEY;

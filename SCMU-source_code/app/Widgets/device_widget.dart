@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:developer' as developer;
 
 class DeviceWidget extends StatefulWidget {
   const DeviceWidget({super.key});
@@ -10,9 +8,8 @@ class DeviceWidget extends StatefulWidget {
 }
 
 class _DeviceWidget extends State<DeviceWidget> {
-  String deviceName = '19B10010-E8F2-537E-4F6C-D104768A1214';
+  String deviceName = 'Device 1';
   bool isOn = false;
-  String ballsRemaining = '';
 
   final MaterialStateProperty<Icon?> thumbIcon =
       MaterialStateProperty.resolveWith<Icon?>(
@@ -24,53 +21,8 @@ class _DeviceWidget extends State<DeviceWidget> {
     },
   );
 
-  void getDeviceState() async {
-    var collection = FirebaseFirestore.instance.collection('devices');
-    collection.doc('19B10010-E8F2-537E-4F6C-D104768A1214').snapshots().listen((docSnapshot) {
-      if (docSnapshot.exists) {
-        Map<String, dynamic> data = docSnapshot.data()!;
-
-        // You can then retrieve the value from the Map like this:
-        var status = data['status'];
-        if(status == "OFF"){
-          isOn = false;
-        }
-        else {isOn = true;}
-      }
-    });
-  }
-
-  void setDeviceState(bool state) async{
-    var collection = FirebaseFirestore.instance.collection('devices');
-    String status;
-    if(state){
-      status  = "STANDBY";
-    }
-    else{
-      status = "OFF";
-    }
-    collection.doc('19B10010-E8F2-537E-4F6C-D104768A1214').update({"status": status});
-  }
-
-
   @override
   Widget build(BuildContext context) {
-    getDeviceState();
-
-final docRef = FirebaseFirestore.instance.collection("devices").doc(deviceName);
-    docRef.snapshots().listen(
-      (event) {
-        final source = (event.metadata.hasPendingWrites) ? "Local" : "Server";
-        developer.log("$source data: ${event.data()}");
-        String status = event.get('status');
-        if(status == "OFF") {isOn = false;}
-        else {isOn = true;}
-        ballsRemaining = event.get('ballsRemaining').toString();
-        developer.log(ballsRemaining.toString());
-      },
-      onError: (error) => developer.log("Listen failed: $error"),
-    );
-
     return Container(
         padding: const EdgeInsets.fromLTRB(0, 25, 0, 0),
         child: Column(
@@ -108,14 +60,13 @@ final docRef = FirebaseFirestore.instance.collection("devices").doc(deviceName);
                                     // This is called when the user toggles the switch.
                                     setState(() {
                                       isOn = value;
-                                      setDeviceState(isOn);
                                     });
                                   },
                                 )))))
               ],
             ),
             Row(children: [
-              Text('Balls Remaining:                        $ballsRemaining',
+              Text('Balls Remaining:                        5',
                   style: const TextStyle(
                     fontSize: 25,
                     color: Colors.white,

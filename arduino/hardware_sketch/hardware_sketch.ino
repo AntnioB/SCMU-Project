@@ -48,7 +48,7 @@ static const char *enum_to_string[] ={
     "RESERVED"
 };
 
-State state = STANDBY;
+State state = OFF;
 
 
 //Bluetooth
@@ -138,12 +138,11 @@ void loop() {
       state_reserved();
       break;
   }
-  
+  receiveWifi();
 }
 
 //OFF state represents when the machine was turned off or is out of ball for example
 void state_off(){
-  updateStatus();
   setColor(255,0,0);
   lcd.noBacklight();
   delay(1000);
@@ -158,7 +157,7 @@ void state_standby(){
   boolean connected = (dispenseCharacteristic.value() != 0);
 
   if(connected && BLE.connected()){
-    state = RESERVED;
+    updateStatus(RESERVED);
     delay(1000);
   }
   
@@ -174,7 +173,7 @@ void state_reserved(){
   boolean disconnected = (dispenseCharacteristic.value() != 1);
 
   if(disconnected || !BLE.connected()){
-    state = STANDBY;
+    updateStatus(STANDBY);
     dispenseCharacteristic.writeValue(0);
     delay(1000);
 
@@ -253,16 +252,16 @@ void receiveWifi(){
     while(client.connected()){
       while(client.available()){
         char c = client.read();
-        
-        if(c=='0'){
-          state = OFF;
+        if(c == '0'){
+          updateStatus(OFF);
         }
         else if(c == '1'){
-          state = STANDBY;
+          updateStatus(STANDBY);
         }
       }
     }
   }
+  client.stop();
 }
 
 void setColor(int redValue, int greenValue, int blueValue) {
@@ -298,7 +297,8 @@ void initNetwork(){
   Firebase.reconnectWiFi(true);
 }
 
-void updateStatus(){
+void updateStatus(State newStatus){
+  state = newStatus;
   if (Firebase.ready()){
     String path = "/devices/19B10010-E8F2-537E-4F6C-D104768A1214/";
 

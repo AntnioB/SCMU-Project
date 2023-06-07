@@ -45,7 +45,7 @@ class _ManagerScreen extends State<ManagerScreen> {
                     )),
                 Container(
                     padding: const EdgeInsets.fromLTRB(10, 25, 0, 0),
-                    child: Column(
+                    child: const Column(
                       children: [
                         DeviceWidget(),
                       ],

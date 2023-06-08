@@ -81,7 +81,7 @@ int lcdColumns = 16; //number of display columns
 int lcdRows = 2; //number of display rows
 LiquidCrystal_I2C lcd(0x27, lcdColumns, lcdRows); //creates the lcd 
 
-
+bool hasBalls = true;
 
 void setup() {
   
@@ -231,7 +231,7 @@ void checkForBalls(){
   Serial.println(" cm");
 
   if(distance2 > 6){
-    //sendNotification()
+    hasBalls = false;
   }
 }
 
@@ -305,7 +305,7 @@ void updateStatus(State newStatus){
     FirebaseJson content;
 
     content.set("fields/status/stringValue", String(enum_to_string[state]).c_str());
-    content.set("fields/hasBalls/booleanValue", String(true).c_str());
+    content.set("fields/hasBalls/booleanValue", String(hasBalls).c_str());
     
     // Write an Int number on the database path test/int
     if (Firebase.Firestore.patchDocument(&fbdo, FIREBASE_PROJECT_ID,"", path.c_str(), content.raw(), "")){

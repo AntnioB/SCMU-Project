@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:developer' as developer;
 
 class DeviceWidget extends StatefulWidget {
   const DeviceWidget({super.key});
@@ -14,7 +13,7 @@ class DeviceWidget extends StatefulWidget {
 class _DeviceWidget extends State<DeviceWidget> {
   String deviceName = '19B10010-E8F2-537E-4F6C-D104768A1214';
   bool isOn = false;
-  String ballsRemaining = '';
+  bool hasBalls = false;
 
   final MaterialStateProperty<Icon?> thumbIcon =
       MaterialStateProperty.resolveWith<Icon?>(
@@ -34,6 +33,7 @@ class _DeviceWidget extends State<DeviceWidget> {
 
         // You can then retrieve the value from the Map like this:
         var status = data['status'];
+        hasBalls = data['hasBalls'];
         if(status == "OFF"){
           isOn = false;
         }
@@ -121,11 +121,22 @@ class _DeviceWidget extends State<DeviceWidget> {
               ],
             ),
             Row(children: [
-              Text('Balls Remaining:                        $ballsRemaining',
-                  style: const TextStyle(
+              const Text('Has Balls:',
+                  style: TextStyle(
                     fontSize: 25,
                     color: Colors.white,
                   )),
+              Expanded(child:
+              Container(
+                padding:const EdgeInsets.fromLTRB(0, 0, 25, 0),
+                alignment: Alignment.centerRight,
+                child: Text(
+                hasBalls.toString(),
+                style: const TextStyle(
+                    fontSize: 25,
+                    color: Colors.white,
+                  )
+              )))
             ]),
           ],
         ));

@@ -2,7 +2,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:range_mate_app/Screens/Login/login_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:range_mate_app/Screens/User/manager_screen.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {

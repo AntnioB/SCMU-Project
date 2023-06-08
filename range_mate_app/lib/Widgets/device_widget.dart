@@ -63,6 +63,19 @@ class _DeviceWidget extends State<DeviceWidget> {
   Widget build(BuildContext context) {
     getDeviceState();
 
+// final docRef = FirebaseFirestore.instance.collection("devices").doc(deviceName);
+//     docRef.snapshots().listen(
+//       (event) {
+//         final source = (event.metadata.hasPendingWrites) ? "Local" : "Server";
+//         developer.log("$source data: ${event.data()}");
+//         String status = event.get('status');
+//         if(status == "OFF") {isOn = false;}
+//         else {isOn = true;}
+//         ballsRemaining = event.get('ballsRemaining').toString();
+//         developer.log(ballsRemaining.toString());
+//       },
+//       onError: (error) => developer.log("Listen failed: $error"),
+//     );
 
     return Container(
         padding: const EdgeInsets.fromLTRB(0, 25, 0, 0),

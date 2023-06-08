@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:range_mate_app/Screens/Home/home_screen.dart';
 import 'package:range_mate_app/Screens/Login/signin_screen.dart';
@@ -56,6 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
             }
     );
       if(isManager){
+        await FirebaseMessaging.instance.subscribeToTopic("manager");
         Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ManagerScreen()));
       } else{
         Navigator.of(context).push(MaterialPageRoute(builder: (context) => const HomeScreen()));

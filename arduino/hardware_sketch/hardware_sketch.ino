@@ -48,7 +48,7 @@ static const char *enum_to_string[] ={
     "RESERVED"
 };
 
-State state = OFF;
+State state;
 
 
 //Bluetooth
@@ -88,6 +88,9 @@ void setup() {
   // begin serial port
   Serial.begin (9600);
   while(!Serial); 
+  
+  state = OFF;
+  setColor(255,0,0);
 
   //Bluetooth
   if (!BLE.begin()) {
@@ -106,6 +109,7 @@ void setup() {
   initNetwork();
 
   //LCD
+  lcd.init();
   lcd.backlight();
   lcd.setCursor(0, 0);
   lcd.print("RangeMate");
@@ -127,6 +131,7 @@ void setup() {
 }
 
 void loop() {
+  //Serial.print(String(enum_to_string[state]));
   switch(state){
     case OFF:
       state_off();
@@ -139,19 +144,16 @@ void loop() {
       break;
   }
   receiveWifi();
+  //delay(1000);
 }
 
 //OFF state represents when the machine was turned off or is out of ball for example
 void state_off(){
   setColor(255,0,0);
-  lcd.noBacklight();
-  delay(1000);
 }
 
 //STANDBY state represents a on machine that is waiting to be reserved
 void state_standby(){
-  setColor(0,0,255);
-  
   BLE.poll();
 
   boolean connected = (dispenseCharacteristic.value() != 0);
@@ -159,6 +161,11 @@ void state_standby(){
   if(connected && BLE.connected()){
     updateStatus(RESERVED);
     delay(1000);
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Ready to");
+    lcd.setCursor(0, 1);
+    lcd.print("dispense");
   }
   
   //quando ele for reservado faz BLE.advertise(); depois troca de estado
@@ -173,10 +180,25 @@ void state_reserved(){
   boolean disconnected = (dispenseCharacteristic.value() != 1);
 
   if(disconnected || !BLE.connected()){
+    setColor(255, 255, 255);
+
     updateStatus(STANDBY);
     dispenseCharacteristic.writeValue(0);
-    delay(1000);
 
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Thanks for using");
+    lcd.setCursor(0, 1);
+    lcd.print("RangeMate");
+    
+    delay(5000);
+
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Awating");
+    lcd.setCursor(0, 1);
+    lcd.print("bluetooth ...");
+    setColor(0,0,255);
   }
 
   checkForMovement();
@@ -184,6 +206,7 @@ void state_reserved(){
 }
 
 void checkForMovement(){
+  
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2); // wait for 2 ms to avoid collision in serial monitor
 
@@ -207,6 +230,12 @@ void checkForMovement(){
     spin();
     delay(3000);
     checkForBalls();
+    
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Ready to");
+    lcd.setCursor(0, 1);
+    lcd.print("dispense");
   }
 }
 
@@ -243,7 +272,6 @@ void spin() {
   servo.write(180);
   delay(1000);
   servo.write(0);
-  lcd.clear();
 }
 
 void receiveWifi(){
@@ -252,11 +280,28 @@ void receiveWifi(){
     while(client.connected()){
       while(client.available()){
         char c = client.read();
+        Serial.println(c);
         if(c == '0'){
           updateStatus(OFF);
+          client.stop();
+
+          lcd.clear();
+          lcd.setCursor(0, 0);
+          lcd.print("RangeMate");
+          setColor(255,0,0);
+
+          return;
         }
         else if(c == '1'){
           updateStatus(STANDBY);
+          client.stop();
+          lcd.clear();
+          lcd.setCursor(0, 0);
+          lcd.print("Awating");
+          lcd.setCursor(0, 1);
+          lcd.print("bluetooth ...");
+          setColor(0,0,255);
+          return;
         }
       }
     }
@@ -299,6 +344,7 @@ void initNetwork(){
 
 void updateStatus(State newStatus){
   state = newStatus;
+  Serial.println("Changing state to: " + String(enum_to_string[state]));
   if (Firebase.ready()){
     String path = "/devices/19B10010-E8F2-537E-4F6C-D104768A1214/";
 

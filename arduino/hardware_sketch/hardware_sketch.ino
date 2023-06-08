@@ -261,6 +261,10 @@ void checkForBalls(){
 
   if(distance2 > 6){
     hasBalls = false;
+    updateStatus(RESERVED);
+  }
+  else {
+    hasBalls = true;
   }
 }
 
@@ -282,8 +286,8 @@ void receiveWifi(){
         char c = client.read();
         Serial.println(c);
         if(c == '0'){
-          updateStatus(OFF);
           client.stop();
+          updateStatus(OFF);
 
           lcd.clear();
           lcd.setCursor(0, 0);
@@ -293,8 +297,9 @@ void receiveWifi(){
           return;
         }
         else if(c == '1'){
-          updateStatus(STANDBY);
           client.stop();
+          updateStatus(STANDBY);
+          
           lcd.clear();
           lcd.setCursor(0, 0);
           lcd.print("Awating");
@@ -343,8 +348,11 @@ void initNetwork(){
 }
 
 void updateStatus(State newStatus){
-  state = newStatus;
-  Serial.println("Changing state to: " + String(enum_to_string[state]));
+  if(newStatus != state){
+    state = newStatus;
+    Serial.println("Changing state to: " + String(enum_to_string[state]));
+  }
+  
   if (Firebase.ready()){
     String path = "/devices/19B10010-E8F2-537E-4F6C-D104768A1214/";
 

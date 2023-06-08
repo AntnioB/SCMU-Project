@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:developer' as developer;
@@ -42,13 +44,17 @@ class _DeviceWidget extends State<DeviceWidget> {
 
   void setDeviceState(bool state) async{
     var collection = FirebaseFirestore.instance.collection('devices');
+    Socket socket = await Socket.connect('192.168.0.92' ,80); // serrado -> 192.168.0.92 | uni -> ?
     String status;
     if(state){
       status  = "STANDBY";
+      socket.write('1');
     }
     else{
       status = "OFF";
+      socket.write('0');
     }
+    socket.close();
     collection.doc('19B10010-E8F2-537E-4F6C-D104768A1214').update({"status": status});
   }
 
@@ -75,9 +81,9 @@ class _DeviceWidget extends State<DeviceWidget> {
         padding: const EdgeInsets.fromLTRB(0, 25, 0, 0),
         child: Column(
           children: [
-            Text(
+            const Text(
               'deviceID:',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 25,
                 color: Colors.white,
               ),

@@ -31,6 +31,8 @@ FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
 
+WiFiServer wifiServer(80);
+
 
 //state
 typedef enum {
@@ -46,7 +48,7 @@ static const char *enum_to_string[] ={
     "RESERVED"
 };
 
-State state = STANDBY;
+State state = OFF;
 
 
 //Bluetooth
@@ -127,24 +129,20 @@ void setup() {
 void loop() {
   switch(state){
     case OFF:
-    Serial.println("OFF");
       state_off();
       break;
     case STANDBY:
-      Serial.println("STANDBY");
       state_standby();
       break;
     case RESERVED:
-      Serial.println("RESERVED");
       state_reserved();
       break;
   }
-  
+  receiveWifi();
 }
 
 //OFF state represents when the machine was turned off or is out of ball for example
 void state_off(){
-  updateStatus();
   setColor(255,0,0);
   lcd.noBacklight();
   delay(1000);
@@ -159,7 +157,7 @@ void state_standby(){
   boolean connected = (dispenseCharacteristic.value() != 0);
 
   if(connected && BLE.connected()){
-    state = RESERVED;
+    updateStatus(RESERVED);
     delay(1000);
   }
   
@@ -175,7 +173,7 @@ void state_reserved(){
   boolean disconnected = (dispenseCharacteristic.value() != 1);
 
   if(disconnected || !BLE.connected()){
-    state = STANDBY;
+    updateStatus(STANDBY);
     dispenseCharacteristic.writeValue(0);
     delay(1000);
 
@@ -248,6 +246,24 @@ void spin() {
   lcd.clear();
 }
 
+void receiveWifi(){
+  WiFiClient client = wifiServer.available();
+  if(client){
+    while(client.connected()){
+      while(client.available()){
+        char c = client.read();
+        if(c == '0'){
+          updateStatus(OFF);
+        }
+        else if(c == '1'){
+          updateStatus(STANDBY);
+        }
+      }
+    }
+  }
+  client.stop();
+}
+
 void setColor(int redValue, int greenValue, int blueValue) {
   analogWrite(led_r, 255-redValue);
   analogWrite(led_g, 255-greenValue);
@@ -266,6 +282,8 @@ void initNetwork(){
   Serial.println(WiFi.localIP());
   Serial.println();
 
+  wifiServer.begin();
+
   /* Assign the api key (required) */
   config.api_key = API_KEY;
 
@@ -279,7 +297,8 @@ void initNetwork(){
   Firebase.reconnectWiFi(true);
 }
 
-void updateStatus(){
+void updateStatus(State newStatus){
+  state = newStatus;
   if (Firebase.ready()){
     String path = "/devices/19B10010-E8F2-537E-4F6C-D104768A1214/";
 

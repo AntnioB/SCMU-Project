@@ -150,6 +150,7 @@ void loop() {
 //OFF state represents when the machine was turned off or is out of ball for example
 void state_off(){
   setColor(255,0,0);
+  delay(1000);
 }
 
 //STANDBY state represents a on machine that is waiting to be reserved
